@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Human Body Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-container.active {
+            display: block;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .options {
+            list-style: none;
+        }
+
+        .option {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .option.incorrect {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .result-container {
+            display: none;
+            text-align: center;
+        }
+
+        .result-container.active {
+            display: block;
+        }
+
+        .score {
+            font-size: 3em;
+            color: #667eea;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .message {
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .start-container {
+            text-align: center;
+        }
+
+        .start-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Human Body Quiz</h1>
+        
+        <div class="start-container active" id="startContainer">
+            <p>Test your knowledge about the human body! Answer 5 questions and see how well you do.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="progress" id="progress"></div>
+            <div class="question" id="question"></div>
+            <ul class="options" id="options"></ul>
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="score" id="score"></div>
+            <div class="message" id="message"></div>
+            <button class="btn" onclick="restartQuiz()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Which is the largest bone in the human body?",
+                options: ["Femur", "Tibia", "Humerus", "Radius", "Ulna"],
+                correct: 0
+            },
+            {
+                question: "How many chambers does the human heart have?",
+                options: ["Two", "Three", "Four", "Five", "Six"],
+                correct: 2
+            },
+            {
+                question: "What is the largest organ in the human body?",
+                options: ["Liver", "Brain", "Skin", "Lungs", "Heart"],
+                correct: 2
+            },
+            {
+                question: "How many bones are in the adult human body?",
+                options: ["186", "206", "226", "246", "266"],
+                correct: 1
+            },
+            {
+                question: "Which blood type is known as the universal donor?",
+                options: ["A+", "B+", "AB+", "O-", "O+"],
+                correct: 3
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        function startQuiz() {
+            document.getElementById('startContainer').classList.remove('active');
+            document.getElementById('quizContainer').classList.add('active');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = quizData[currentQuestion];
+            document.getElementById('progress').textContent = `Question ${currentQuestion + 1} of ${quizData.length}`;
+            document.getElementById('question').textContent = question.question;
+            
+            const optionsList = document.getElementById('options');
+            optionsList.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const li = document.createElement('li');
+                li.className = 'option';
+                li.textContent = `${index + 1}. ${option}`;
+                li.onclick = () => selectAnswer(index);
+                optionsList.appendChild(li);
+            });
+            
+            selectedAnswer = null;
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        function selectAnswer(index) {
+            if (selectedAnswer !== null) return;
+            
+            selectedAnswer = index;
+            const options = document.querySelectorAll('.option');
+            const correctAnswer = quizData[currentQuestion].correct;
+            
+            options[index].classList.add(index === correctAnswer ? 'correct' : 'incorrect');
+            if (index !== correctAnswer) {
+                options[correctAnswer].classList.add('correct');
+            }
+            
+            if (index === correctAnswer) {
+                score++;
+            }
+            
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            
+            if (currentQuestion < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').classList.remove('active');
+            document.getElementById('resultContainer').classList.add('active');
+            
+            const percentage = (score / quizData.length) * 100;
+            document.getElementById('score').textContent = `${score}/${quizData.length}`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = '🎉 Perfect! You\'re a human body expert!';
+            } else if (percentage >= 80) {
+                message = '🌟 Excellent work! You know your anatomy!';
+            } else if (percentage >= 60) {
+                message = '👍 Good job! Keep learning!';
+            } else {
+                message = '📚 Keep studying! You\'ll do better next time!';
+            }
+            
+            document.getElementById('message').textContent = message;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            document.getElementById('resultContainer').classList.remove('active');
+            document.getElementById('startContainer').classList.add('active');
+        }
+    </script>
+</body>
+</html>
